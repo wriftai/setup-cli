@@ -1,0 +1,35 @@
+name: "WriftAI CLI Action"
+description: "Setup WriftAI CLI, wriftai, on GitHub Actions runners"
+author: "WriftAI"
+
+branding:
+  icon: 'play'
+  color: 'green'
+
+inputs:
+  version:
+    description: "Release version to install , or 'latest'"
+    required: false
+    default: "latest"
+
+outputs: 
+  version:
+    description: The version of WriftAI CLI that was installed 
+    value: ${{steps.set-version.outputs.version}}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install CLI
+      uses: jaxxstorm/action-install-gh-release@6096f2a2bbfee498ced520b6922ac2c06e990ed2
+      id: install 
+      with:
+        repo: "wriftai/cli"
+        # TODO: Remove setting PAT once CLI is publicly accessible.
+        token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
+        tag: ${{ inputs.version }}
+
+    - name: Set installed version 
+      id: set-version
+      shell: bash
+      run: echo "version=$(wriftai version --skip-update-check | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)" >> "$GITHUB_OUTPUT"

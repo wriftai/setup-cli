@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  
+# Cancel older runs on the same branch/PR
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        version: [v0.31.0, latest]
+
+    runs-on: ${{ matrix.os }}
+
+    # TODO: Remove setting PAT in environment variable once CLI is publicly accessible.
+    env:
+      WRIFTAI_SETUP_CLI_PAT: ${{secrets.WRIFTAI_SETUP_CLI_PAT}}
+
+    steps:
+      - name: Checkout Action Repo
+        uses: actions/checkout@v4
+
+      - name: Setup wriftai CLI
+        id: setup_cli 
+        uses: ./
+        with:
+          version: ${{ matrix.version }} 
+
+      # Ensures that the installation was successful. 
+      - name: Verify CLI
+        run: |
+          cli_output=$(wriftai version --skip-update-check)
+
+          if [[ "${{ matrix.version }}" == "v0.31.0" ]]; then
+
+            if [[ "${{ steps.setup_cli.outputs.version }}" != "0.31.0" ]]; then
+              echo "Expected version was not outputted."
+              exit 1
+            fi
+            
+            if [[ "$cli_output" != "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z" ]]; then
+              echo "CLI output did not match."
+              exit 1
+            fi
+          fi
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    # Release job needs higher permissions than the test job
+    permissions:
+      contents: write # create tags & GitHub releases
+      pull-requests: write # open/update Release PR
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
