@@ -54,7 +54,7 @@ steps:
 ---
 
 ## Contributing 
-Coming soon.
+Contributions are very welcome. To learn more, see the [Contributor Guide](./CONTRIBUTING.md).
 
 ## License 
 Copyright (c) Sych Inc. All rights reserved. 
