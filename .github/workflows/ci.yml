@@ -41,18 +41,18 @@ jobs:
 
       # Ensures that the installation was successful. 
       - name: Verify CLI
+        shell: pwsh
         run: |
-          cli_output=$(wriftai version --skip-update-check)
+          $cliOutput = wriftai version --skip-update-check
 
-          if [[ "${{ matrix.version }}" == "v0.31.0" ]]; then
-
-            if [[ "${{ steps.setup_cli.outputs.version }}" != "0.31.0" ]]; then
-              echo "Expected version was not outputted."
+          if ("${{ matrix.version }}" -eq "v0.31.0") {
+            if ("${{ steps.setup_cli.outputs.version }}" -ne "0.31.0") {
+              Write-Error "Expected version was not outputted."
               exit 1
-            fi
+            }
             
-            if [[ "$cli_output" != "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z" ]]; then
-              echo "CLI output did not match."
+            if ($cliOutput -ne "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z") {
+              Write-Error "CLI output did not match."
               exit 1
-            fi
-          fi
+            }
+          }
