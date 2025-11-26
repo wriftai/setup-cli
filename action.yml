@@ -15,7 +15,7 @@ inputs:
 outputs: 
   version:
     description: The version of WriftAI CLI that was installed 
-    value: ${{steps.set-version.outputs.version}}
+    value: ${{steps.version-output.outputs.version}}
 
 runs:
   using: "composite"
@@ -29,18 +29,24 @@ runs:
         token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
         tag: ${{ inputs.version }}
 
-    - name: Debug CLI output
+    - name: Get installed version (Linux/macOS)
+      id: set-version-unix
+      shell: bash
+      run: |
+        version=$(wriftai version --skip-update-check | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+        echo "VERSION=$version" >> $GITHUB_ENV
+      if: runner.os != 'Windows'
+
+    - name: Get installed version (Windows)
+      id: set-version-windows
       shell: pwsh
       run: |
-        Write-Host "=== CLI Version Output Debug ==="
-        Write-Host "Runner OS: $env:Runner_OS"
-        Write-Host "Installing version: ${{ inputs.version }}"
-        $cliOutput = wriftai version --skip-update-check
-        Write-Host "Raw CLI output: '$cliOutput'"
-        Write-Host "Output length: $($cliOutput.Length)"
-        Write-Host "Output type: $($cliOutput.GetType().Name)"
+        $version = wriftai version --skip-update-check | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+        echo "VERSION=$version" >> $env:GITHUB_ENV
+      if: runner.os == 'Windows'
 
-    - name: Set installed version 
-      id: set-version
-      shell: pwsh
-      run: echo "version=$((wriftai version --skip-update-check | Select-String -Pattern '(\d+\.\d+\.\d+)').Matches.Groups[1].Value)" >> $env:GITHUB_OUTPUT
+    - name: Set final version output
+      id: version-output
+      shell: bash
+      run: |
+        echo "version=$VERSION" >> $GITHUB_OUTPUT

@@ -39,45 +39,40 @@ jobs:
         with:
           version: ${{ matrix.version }} 
 
-      - name: Debug Windows executable
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Write-Host "=== Testing wriftai.exe directly ==="
-          $exePath = "C:\hostedtoolcache\windows\wriftai\cli\latest\windows-x64\wriftai.exe"
-          
-          Write-Host "File exists: $(Test-Path $exePath)"
-          Write-Host "File size: $((Get-Item $exePath).Length) bytes"
-          
-          # Try running with full path
-          Write-Host "=== Running with full path ==="
-          & $exePath version --skip-update-check
-          
-          Write-Host "Exit code: $LASTEXITCODE"
-          
-          # Try capturing different streams
-          Write-Host "=== Testing different output streams ==="
-          $result = & $exePath version --skip-update-check 2>&1
-          Write-Host "Combined output: '$result'"
-          
-          # Check if it's a terminal interaction issue
-          Write-Host "=== Testing with --help ==="
-          & $exePath --help
-
       # Ensures that the installation was successful. 
       - name: Verify CLI
+        run: |
+          cli_output=$(wriftai version --skip-update-check)
+
+          if [[ "${{ matrix.version }}" == "v0.31.0" ]]; then
+
+            if [[ "${{ steps.setup_cli.outputs.version }}" != "0.31.0" ]]; then
+              echo "Expected version was not outputted."
+              exit 1
+            fi
+            
+            if [[ "$cli_output" != "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z" ]]; then
+              echo "CLI output did not match."
+              exit 1
+            fi
+          fi
+        if: runner.os != 'Windows'
+
+      - name: Verify CLI (Windows)
         shell: pwsh
         run: |
-          $cliOutput = wriftai version --skip-update-check
-
+          $cli_output = wriftai version --skip-update-check
+          
           if ("${{ matrix.version }}" -eq "v0.31.0") {
             if ("${{ steps.setup_cli.outputs.version }}" -ne "0.31.0") {
               Write-Error "Expected version was not outputted."
               exit 1
             }
             
-            if ($cliOutput -ne "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z") {
+            $expected_output = "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z"
+            if ($cli_output -ne $expected_output) {
               Write-Error "CLI output did not match."
               exit 1
             }
           }
+        if: runner.os == 'Windows'
