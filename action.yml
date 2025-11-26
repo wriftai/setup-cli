@@ -29,32 +29,15 @@ runs:
         token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
         tag: ${{ inputs.version }}
 
-    - name: Unblock Windows executable (Windows only)
-      shell: pwsh
-      run: |
-        Write-Host "=== Unblocking Windows executable ==="
-        $exe_path = "C:\hostedtoolcache\windows\wriftai\cli\${{ inputs.version }}\windows-x64\wriftai.exe"
-        if (Test-Path $exe_path) {
-          Write-Host "Unblocking: $exe_path"
-          Unblock-File -Path $exe_path
-          Write-Host "Unblocked successfully"
-        } else {
-          Write-Host "Executable not found at: $exe_path"
-        }
-      if: runner.os == 'Windows'
-
     - name: Set installed version
       id: set-version
       shell: pwsh
       run: |
-        
         $cli_output = wriftai version --skip-update-check
         Write-Host "CLI output: '$cli_output'"
         
         if (-not $cli_output) {
-          Write-Host "Trying with .exe extension..."
           $cli_output = wriftai.exe version --skip-update-check
-          Write-Host "CLI output with .exe: '$cli_output'"
         }
         
         $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
