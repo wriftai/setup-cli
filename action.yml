@@ -29,6 +29,17 @@ runs:
         token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
         tag: ${{ inputs.version }}
 
+    - name: Debug CLI output
+      shell: pwsh
+      run: |
+        Write-Host "=== CLI Version Output Debug ==="
+        Write-Host "Runner OS: $env:Runner_OS"
+        Write-Host "Installing version: ${{ inputs.version }}"
+        $cliOutput = wriftai version --skip-update-check
+        Write-Host "Raw CLI output: '$cliOutput'"
+        Write-Host "Output length: $($cliOutput.Length)"
+        Write-Host "Output type: $($cliOutput.GetType().Name)"
+
     - name: Set installed version 
       id: set-version
       shell: pwsh
