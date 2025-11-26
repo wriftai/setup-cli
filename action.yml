@@ -29,31 +29,50 @@ runs:
         token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
         tag: ${{ inputs.version }}
 
+    - name: Unblock Windows executable (Windows only)
+      shell: pwsh
+      run: |
+        Write-Host "=== Unblocking Windows executable ==="
+        $exe_path = "C:\hostedtoolcache\windows\wriftai\cli\${{ inputs.version }}\windows-x64\wriftai.exe"
+        if (Test-Path $exe_path) {
+          Write-Host "Unblocking: $exe_path"
+          Unblock-File -Path $exe_path
+          Write-Host "Unblocked successfully"
+        } else {
+          Write-Host "Executable not found at: $exe_path"
+        }
+      if: runner.os == 'Windows'
+
     - name: Set installed version
       id: set-version
       shell: pwsh
       run: |
-        # Debug: Check if wriftai command exists and works
-        Write-Host "=== Checking wriftai command ==="
-        Get-Command wriftai -ErrorAction Continue
+        Write-Host "=== Testing CLI command ==="
+        
+        # Try different methods
         $cli_output = wriftai version --skip-update-check
-        Write-Host "CLI output: $cli_output"
+        Write-Host "CLI output: '$cli_output'"
         
-        # Try multiple extraction methods
-        $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
-        Write-Host "Extracted version (Method 1): $version"
-        
-        # Alternative method if first fails
-        if (-not $version) {
-          $version = $cli_output -replace '.*?(\d+\.\d+\.\d+).*', '$1'
-          Write-Host "Extracted version (Method 2): $version"
+        if (-not $cli_output) {
+          Write-Host "Trying with .exe extension..."
+          $cli_output = wriftai.exe version --skip-update-check
+          Write-Host "CLI output with .exe: '$cli_output'"
         }
         
-        # Final fallback
-        if (-not $version) {
+        if (-not $cli_output) {
+          Write-Host "Trying with full path..."
+          $full_path = "C:\hostedtoolcache\windows\wriftai\cli\${{ inputs.version }}\windows-x64\wriftai.exe"
+          $cli_output = & $full_path version --skip-update-check
+          Write-Host "CLI output with full path: '$cli_output'"
+        }
+        
+        # Extract version
+        if ($cli_output) {
+          $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+        } else {
           $version = "unknown"
-          Write-Host "Using fallback version: $version"
         }
         
-        Write-Host "=== Setting output version: $version ==="
+        Write-Host "=== Final version: $version ==="
         echo "version=$version" >> $env:GITHUB_OUTPUT
+
