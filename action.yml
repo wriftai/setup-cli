@@ -33,5 +33,27 @@ runs:
       id: set-version
       shell: pwsh
       run: |
-        $version = wriftai version --skip-update-check | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+        # Debug: Check if wriftai command exists and works
+        Write-Host "=== Checking wriftai command ==="
+        Get-Command wriftai -ErrorAction Continue
+        $cli_output = wriftai version --skip-update-check
+        Write-Host "CLI output: $cli_output"
+        
+        # Try multiple extraction methods
+        $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+        Write-Host "Extracted version (Method 1): $version"
+        
+        # Alternative method if first fails
+        if (-not $version) {
+          $version = $cli_output -replace '.*?(\d+\.\d+\.\d+).*', '$1'
+          Write-Host "Extracted version (Method 2): $version"
+        }
+        
+        # Final fallback
+        if (-not $version) {
+          $version = "unknown"
+          Write-Host "Using fallback version: $version"
+        }
+        
+        Write-Host "=== Setting output version: $version ==="
         echo "version=$version" >> $env:GITHUB_OUTPUT
