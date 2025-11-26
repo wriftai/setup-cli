@@ -47,9 +47,7 @@ runs:
       id: set-version
       shell: pwsh
       run: |
-        Write-Host "=== Testing CLI command ==="
         
-        # Try different methods
         $cli_output = wriftai version --skip-update-check
         Write-Host "CLI output: '$cli_output'"
         
@@ -59,20 +57,7 @@ runs:
           Write-Host "CLI output with .exe: '$cli_output'"
         }
         
-        if (-not $cli_output) {
-          Write-Host "Trying with full path..."
-          $full_path = "C:\hostedtoolcache\windows\wriftai\cli\${{ inputs.version }}\windows-x64\wriftai.exe"
-          $cli_output = & $full_path version --skip-update-check
-          Write-Host "CLI output with full path: '$cli_output'"
-        }
+        $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
         
-        # Extract version
-        if ($cli_output) {
-          $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
-        } else {
-          $version = "unknown"
-        }
-        
-        Write-Host "=== Final version: $version ==="
         echo "version=$version" >> $env:GITHUB_OUTPUT
 

@@ -61,7 +61,7 @@ jobs:
       - name: Verify CLI (Windows)
         shell: pwsh
         run: |
-          $cli_output = wriftai version --skip-update-check
+          $cli_output = wriftai.exe version --skip-update-check
           
           if ("${{ matrix.version }}" -eq "v0.31.0") {
             if ("${{ steps.setup_cli.outputs.version }}" -ne "0.31.0") {
