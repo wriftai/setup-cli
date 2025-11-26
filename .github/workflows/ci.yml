@@ -39,6 +39,31 @@ jobs:
         with:
           version: ${{ matrix.version }} 
 
+      - name: Debug Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "=== Testing wriftai.exe directly ==="
+          $exePath = "C:\hostedtoolcache\windows\wriftai\cli\latest\windows-x64\wriftai.exe"
+          
+          Write-Host "File exists: $(Test-Path $exePath)"
+          Write-Host "File size: $((Get-Item $exePath).Length) bytes"
+          
+          # Try running with full path
+          Write-Host "=== Running with full path ==="
+          & $exePath version --skip-update-check
+          
+          Write-Host "Exit code: $LASTEXITCODE"
+          
+          # Try capturing different streams
+          Write-Host "=== Testing different output streams ==="
+          $result = & $exePath version --skip-update-check 2>&1
+          Write-Host "Combined output: '$result'"
+          
+          # Check if it's a terminal interaction issue
+          Write-Host "=== Testing with --help ==="
+          & $exePath --help
+
       # Ensures that the installation was successful. 
       - name: Verify CLI
         shell: pwsh
