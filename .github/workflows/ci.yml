@@ -41,6 +41,7 @@ jobs:
 
       # Ensures that the installation was successful. 
       - name: Verify CLI
+        if: runner.os != 'Windows'
         run: |
           cli_output=$(wriftai version --skip-update-check)
 
@@ -56,9 +57,9 @@ jobs:
               exit 1
             fi
           fi
-        if: runner.os != 'Windows'
 
       - name: Verify CLI (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $cli_output = wriftai.exe version --skip-update-check
@@ -75,4 +76,3 @@ jobs:
               exit 1
             }
           }
-        if: runner.os == 'Windows'

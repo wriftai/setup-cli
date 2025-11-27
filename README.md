@@ -56,6 +56,9 @@ steps:
 ## Contributing 
 Coming soon.
 
+## Releases 
+To publish a new veriosn, manually create a tag and release from the repository. 
+
 ## License 
 Copyright (c) Sych Inc. All rights reserved. 
 

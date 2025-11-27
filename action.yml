@@ -33,14 +33,13 @@ runs:
       id: set-version
       shell: pwsh
       run: |
-        $cli_output = wriftai version --skip-update-check
-        Write-Host "CLI output: '$cli_output'"
-        
-        if (-not $cli_output) {
+        if ("${{ runner.os }}" -eq "Windows") {
           $cli_output = wriftai.exe version --skip-update-check
+        } else {
+          $cli_output = wriftai version --skip-update-check
         }
         
+        # Extracts the version from the CLI output using regex.
         $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
         
         echo "version=$version" >> $env:GITHUB_OUTPUT
-
