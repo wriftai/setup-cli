@@ -57,7 +57,7 @@ steps:
 Coming soon.
 
 ## Releases 
-To publish a new veriosn, manually create a tag and release from the repository. 
+To publish a new version, manually create a tag and release from the repository. Also ensure that `Publish to Marketplace` is checked when creating a release. 
 
 ## License 
 Copyright (c) Sych Inc. All rights reserved. 
