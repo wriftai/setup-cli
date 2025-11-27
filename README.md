@@ -54,7 +54,7 @@ steps:
 ---
 
 ## Contributing 
-Coming soon.
+Contributions are very welcome. To learn more, see the [Contributor Guide](./CONTRIBUTING.md).
 
 ## Releases 
 To publish a new version, manually create a tag and release from the repository. Also ensure that `Publish to Marketplace` is checked when creating a release. 
