@@ -29,7 +29,17 @@ runs:
         token: ${{ env.WRIFTAI_SETUP_CLI_PAT }}
         tag: ${{ inputs.version }}
 
-    - name: Set installed version 
+    - name: Set installed version
       id: set-version
-      shell: bash
-      run: echo "version=$(wriftai version --skip-update-check | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)" >> "$GITHUB_OUTPUT"
+      shell: pwsh
+      run: |
+        if ("${{ runner.os }}" -eq "Windows") {
+          $cli_output = wriftai.exe version --skip-update-check
+        } else {
+          $cli_output = wriftai version --skip-update-check
+        }
+        
+        # Extracts the version from the CLI output using regex.
+        $version = $cli_output | Select-String -Pattern '(\d+\.\d+\.\d+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+        
+        echo "version=$version" >> $env:GITHUB_OUTPUT

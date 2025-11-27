@@ -20,7 +20,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         version: [v0.31.0, latest]
 
     runs-on: ${{ matrix.os }}
@@ -41,6 +41,7 @@ jobs:
 
       # Ensures that the installation was successful. 
       - name: Verify CLI
+        if: runner.os != 'Windows'
         run: |
           cli_output=$(wriftai version --skip-update-check)
 
@@ -56,3 +57,22 @@ jobs:
               exit 1
             fi
           fi
+
+      - name: Verify CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $cli_output = wriftai.exe version --skip-update-check
+          
+          if ("${{ matrix.version }}" -eq "v0.31.0") {
+            if ("${{ steps.setup_cli.outputs.version }}" -ne "0.31.0") {
+              Write-Error "Expected version was not outputted."
+              exit 1
+            }
+            
+            $expected_output = "✔ wriftai 0.31.0 (f80cb7b) 2025-11-13T15:49:11Z"
+            if ($cli_output -ne $expected_output) {
+              Write-Error "CLI output did not match."
+              exit 1
+            }
+          }
